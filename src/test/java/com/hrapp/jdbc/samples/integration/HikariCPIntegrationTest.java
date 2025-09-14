@@ -179,7 +179,7 @@ class HikariCPIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("Should handle connection pool exhaustion gracefully")
     @Timeout(value = 45, unit = TimeUnit.SECONDS)
-    void testConnectionPoolExhaustion() throws InterruptedException {
+    void testConnectionPoolExhaustion() throws InterruptedException, SQLException {
         HikariDataSource hikariDS = (HikariDataSource) getDataSource();
         int maxPoolSize = hikariDS.getMaximumPoolSize();
         long connectionTimeout = hikariDS.getConnectionTimeout();
@@ -327,7 +327,7 @@ class HikariCPIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("Should perform under sustained load")
     @Timeout(value = 120, unit = TimeUnit.SECONDS)
-    void testSustainedLoad() throws InterruptedException, ExecutionException {
+    void testSustainedLoad() throws InterruptedException, ExecutionException, SQLException {
         final int duration = 10; // seconds
         final int threadsCount = 8;
         final AtomicInteger operationCount = new AtomicInteger(0);

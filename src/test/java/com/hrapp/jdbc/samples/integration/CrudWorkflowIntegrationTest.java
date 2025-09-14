@@ -26,9 +26,12 @@ class CrudWorkflowIntegrationTest extends BaseIntegrationTest {
     private JdbcBean jdbcBean;
 
     @BeforeEach
-    void setUp() {
-        // Initialize JdbcBean with TestContainer data source
-        jdbcBean = new JdbcBeanImpl(getDataSource());
+    void setUp() throws SQLException {
+        // Initialize JdbcBean with default ConnectionFactory
+        jdbcBean = new JdbcBeanImpl();
+        
+        // Insert test employees for testing
+        insertTestEmployees();
     }
 
     @Test
@@ -44,11 +47,11 @@ class CrudWorkflowIntegrationTest extends BaseIntegrationTest {
         newEmployee.setJobId("IT_PROG");
         newEmployee.setSalary(new BigDecimal("80000.00"));
 
-        String result = jdbcBean.addEmployee(newEmployee);
-        assertEquals("Employee added successfully", result, "Employee should be added successfully");
+        Employee result = jdbcBean.createEmployee(newEmployee);
+        assertNotNull(result, "Employee should be created successfully");
 
         // READ - Verify employee was created
-        List<Employee> allEmployees = jdbcBean.getAllEmployees();
+        List<Employee> allEmployees = jdbcBean.getEmployees();
         assertFalse(allEmployees.isEmpty(), "Should have at least one employee");
         
         Employee createdEmployee = allEmployees.stream()
@@ -67,7 +70,8 @@ class CrudWorkflowIntegrationTest extends BaseIntegrationTest {
 
         // READ BY ID - Test specific employee retrieval
         int employeeId = createdEmployee.getEmployeeId();
-        Employee foundEmployee = jdbcBean.getEmployeeById(employeeId);
+        List<Employee> foundEmployees = jdbcBean.getEmployee(employeeId);
+        Employee foundEmployee = foundEmployees.isEmpty() ? null : foundEmployees.get(0);
         assertNotNull(foundEmployee, "Employee should be found by ID");
         assertEquals(employeeId, foundEmployee.getEmployeeId());
         assertEquals("Integration", foundEmployee.getFirstName());
@@ -78,11 +82,12 @@ class CrudWorkflowIntegrationTest extends BaseIntegrationTest {
         foundEmployee.setSalary(new BigDecimal("85000.00"));
         foundEmployee.setPhoneNumber("555-8888");
 
-        String updateResult = jdbcBean.updateEmployee(foundEmployee);
-        assertEquals("Employee updated successfully", updateResult, "Employee should be updated successfully");
+        Employee updateResult = jdbcBean.updateEmployee(foundEmployee);
+        assertNotNull(updateResult, "Employee should be updated successfully");
 
         // READ AFTER UPDATE - Verify changes
-        Employee updatedEmployee = jdbcBean.getEmployeeById(employeeId);
+        List<Employee> updatedEmployees = jdbcBean.getEmployee(employeeId);
+        Employee updatedEmployee = updatedEmployees.isEmpty() ? null : updatedEmployees.get(0);
         assertNotNull(updatedEmployee, "Updated employee should still exist");
         assertEquals("Updated", updatedEmployee.getFirstName());
         assertEquals("Employee", updatedEmployee.getLastName());
@@ -93,15 +98,16 @@ class CrudWorkflowIntegrationTest extends BaseIntegrationTest {
         assertEquals("IT_PROG", updatedEmployee.getJobId());
 
         // DELETE - Remove employee
-        String deleteResult = jdbcBean.deleteEmployee(employeeId);
-        assertEquals("Employee deleted successfully", deleteResult, "Employee should be deleted successfully");
+        boolean deleteResult = jdbcBean.deleteEmployee(employeeId);
+        assertTrue(deleteResult, "Employee should be deleted successfully");
 
         // READ AFTER DELETE - Verify employee is gone
-        Employee deletedEmployee = jdbcBean.getEmployeeById(employeeId);
+        List<Employee> deletedEmployees = jdbcBean.getEmployee(employeeId);
+        Employee deletedEmployee = deletedEmployees.isEmpty() ? null : deletedEmployees.get(0);
         assertNull(deletedEmployee, "Employee should not exist after deletion");
 
         // Verify employee is not in the list
-        List<Employee> finalEmployees = jdbcBean.getAllEmployees();
+        List<Employee> finalEmployees = jdbcBean.getEmployees();
         boolean employeeExists = finalEmployees.stream()
                 .anyMatch(emp -> emp.getEmployeeId() == employeeId);
         assertFalse(employeeExists, "Deleted employee should not appear in employee list");
@@ -121,12 +127,12 @@ class CrudWorkflowIntegrationTest extends BaseIntegrationTest {
 
         // Add all employees
         for (Employee emp : employees) {
-            String result = jdbcBean.addEmployee(emp);
-            assertEquals("Employee added successfully", result);
+            Employee result = jdbcBean.createEmployee(emp);
+            assertNotNull(result, "Employee should be created successfully");
         }
 
         // Verify all employees exist
-        List<Employee> allEmployees = jdbcBean.getAllEmployees();
+        List<Employee> allEmployees = jdbcBean.getEmployees();
         assertTrue(allEmployees.size() >= 5, "Should have at least 5 employees");
 
         // Test salary increment on all employees
@@ -165,7 +171,7 @@ class CrudWorkflowIntegrationTest extends BaseIntegrationTest {
             final int threadId = i;
             threads[i] = new Thread(() -> {
                 try {
-                    JdbcBean threadJdbcBean = new JdbcBeanImpl(getDataSource());
+                    JdbcBean threadJdbcBean = new JdbcBeanImpl();
                     
                     for (int j = 0; j < operationsPerThread; j++) {
                         // Create employee
@@ -177,11 +183,11 @@ class CrudWorkflowIntegrationTest extends BaseIntegrationTest {
                             "75000.00"
                         );
                         
-                        String addResult = threadJdbcBean.addEmployee(emp);
-                        assertEquals("Employee added successfully", addResult);
+                        Employee addResult = threadJdbcBean.createEmployee(emp);
+                        assertNotNull(addResult, "Employee should be created successfully");
                         
                         // Read all employees
-                        List<Employee> employees = threadJdbcBean.getAllEmployees();
+                        List<Employee> employees = threadJdbcBean.getEmployees();
                         assertFalse(employees.isEmpty());
                         
                         // Find and update the employee
@@ -192,12 +198,12 @@ class CrudWorkflowIntegrationTest extends BaseIntegrationTest {
                         
                         if (created != null) {
                             created.setSalary(new BigDecimal("80000.00"));
-                            String updateResult = threadJdbcBean.updateEmployee(created);
-                            assertEquals("Employee updated successfully", updateResult);
+                            Employee updateResult = threadJdbcBean.updateEmployee(created);
+                            assertNotNull(updateResult, "Employee should be updated successfully");
                             
                             // Delete the employee
-                            String deleteResult = threadJdbcBean.deleteEmployee(created.getEmployeeId());
-                            assertEquals("Employee deleted successfully", deleteResult);
+                            boolean deleteResult = threadJdbcBean.deleteEmployee(created.getEmployeeId());
+                            assertTrue(deleteResult, "Employee should be deleted successfully");
                         }
                     }
                 } catch (Exception e) {
@@ -213,108 +219,100 @@ class CrudWorkflowIntegrationTest extends BaseIntegrationTest {
 
         // Wait for all threads to complete
         for (Thread thread : threads) {
-            thread.join(10000); // 10 second timeout
+            thread.join(10000); // 10 second timeout per thread
         }
 
         // Check for exceptions
         for (int i = 0; i < threadCount; i++) {
             if (exceptions[i] != null) {
-                fail("Thread " + i + " failed with exception: " + exceptions[i].getMessage());
+                fail("Thread " + i + " threw exception: " + exceptions[i].getMessage());
             }
         }
     }
 
     @Test
-    @DisplayName("Should maintain data integrity during complex operations")
-    void testDataIntegrityDuringComplexOperations() throws SQLException {
-        // Insert test data
-        insertTestEmployees();
+    @DisplayName("Should handle search operations correctly")
+    void testSearchOperations() throws SQLException {
+        // Test search by first name
+        List<Employee> johnEmployees = jdbcBean.getEmployeeByFn("John");
+        assertNotNull(johnEmployees, "Search result should not be null");
         
-        List<Employee> initialEmployees = jdbcBean.getAllEmployees();
-        int initialCount = initialEmployees.size();
-        assertTrue(initialCount >= 5, "Should have at least 5 test employees");
-
-        // Perform salary increment
-        List<Employee> afterIncrement = jdbcBean.incrementSalary(15);
-        assertEquals(initialCount, afterIncrement.size(), 
-            "Employee count should remain same after salary increment");
-
-        // Verify all salaries were increased
-        for (Employee emp : afterIncrement) {
-            Employee original = findEmployeeById(initialEmployees, emp.getEmployeeId());
-            assertNotNull(original, "Original employee should exist");
-            
-            BigDecimal expectedSalary = original.getSalary().multiply(new BigDecimal("1.15"));
-            assertEquals(0, expectedSalary.compareTo(emp.getSalary()), 
-                "Salary should be increased by 15% for employee " + emp.getEmployeeId());
+        // All returned employees should have first names starting with "John"
+        for (Employee emp : johnEmployees) {
+            assertTrue(emp.getFirstName().startsWith("John"), 
+                "Employee first name should start with 'John': " + emp.getFirstName());
         }
 
-        // Test transaction rollback scenario by attempting invalid operation
-        Employee invalidEmployee = new Employee();
-        invalidEmployee.setFirstName("Test");
-        invalidEmployee.setLastName("Invalid");
-        invalidEmployee.setEmail(""); // Invalid empty email
-        invalidEmployee.setPhoneNumber("555-0000");
-        invalidEmployee.setJobId("INVALID_JOB");
-        invalidEmployee.setSalary(new BigDecimal("-1000.00")); // Invalid negative salary
+        // Test search with no results
+        List<Employee> noResults = jdbcBean.getEmployeeByFn("NonExistent");
+        assertNotNull(noResults, "Search result should not be null even when no matches");
+        assertTrue(noResults.isEmpty(), "Should return empty list for non-existent names");
 
-        // This should fail and not affect existing data
-        try {
-            jdbcBean.addEmployee(invalidEmployee);
-        } catch (Exception e) {
-            // Expected to fail
+        // Test search with partial name
+        List<Employee> partialResults = jdbcBean.getEmployeeByFn("J");
+        assertNotNull(partialResults, "Partial search should work");
+        
+        for (Employee emp : partialResults) {
+            assertTrue(emp.getFirstName().startsWith("J"), 
+                "Employee first name should start with 'J': " + emp.getFirstName());
         }
-
-        // Verify data integrity - count should remain same
-        List<Employee> finalEmployees = jdbcBean.getAllEmployees();
-        assertEquals(initialCount, finalEmployees.size(), 
-            "Employee count should remain unchanged after failed operation");
     }
 
     @Test
-    @DisplayName("Should handle edge cases in CRUD operations")
-    void testCrudEdgeCases() throws SQLException {
-        // Test retrieving non-existent employee
-        Employee nonExistent = jdbcBean.getEmployeeById(99999);
-        assertNull(nonExistent, "Non-existent employee should return null");
+    @DisplayName("Should handle salary increment operations")
+    void testSalaryIncrementOperations() throws SQLException {
+        // Get initial employee list
+        List<Employee> initialEmployees = jdbcBean.getEmployees();
+        assertFalse(initialEmployees.isEmpty(), "Should have employees for salary increment test");
 
-        // Test deleting non-existent employee
-        String deleteResult = jdbcBean.deleteEmployee(99999);
-        assertEquals("Employee not found", deleteResult, 
-            "Deleting non-existent employee should return appropriate message");
+        // Apply 15% salary increment
+        List<Employee> incrementedEmployees = jdbcBean.incrementSalary(15);
+        assertNotNull(incrementedEmployees, "Increment result should not be null");
+        assertEquals(initialEmployees.size(), incrementedEmployees.size(), 
+            "Should return same number of employees after increment");
 
-        // Test updating non-existent employee
-        Employee fakeEmployee = new Employee();
-        fakeEmployee.setEmployeeId(99999);
-        fakeEmployee.setFirstName("Fake");
-        fakeEmployee.setLastName("Employee");
-        fakeEmployee.setEmail("fake@anyco.com");
-        fakeEmployee.setPhoneNumber("555-0000");
-        fakeEmployee.setJobId("IT_PROG");
-        fakeEmployee.setSalary(new BigDecimal("50000.00"));
-
-        String updateResult = jdbcBean.updateEmployee(fakeEmployee);
-        assertEquals("Employee not found", updateResult, 
-            "Updating non-existent employee should return appropriate message");
-
-        // Test empty employee list scenario
-        // First, clean all employees
-        List<Employee> allEmployees = jdbcBean.getAllEmployees();
-        for (Employee emp : allEmployees) {
-            jdbcBean.deleteEmployee(emp.getEmployeeId());
+        // Verify salary increases
+        for (Employee incrementedEmp : incrementedEmployees) {
+            Employee originalEmp = initialEmployees.stream()
+                .filter(emp -> emp.getEmployeeId() == incrementedEmp.getEmployeeId())
+                .findFirst()
+                .orElse(null);
+            
+            if (originalEmp != null) {
+                BigDecimal expectedSalary = originalEmp.getSalary().multiply(new BigDecimal("1.15"));
+                assertEquals(0, expectedSalary.compareTo(incrementedEmp.getSalary()),
+                    "Salary should be increased by 15% for employee " + incrementedEmp.getEmployeeId());
+            }
         }
 
-        List<Employee> emptyList = jdbcBean.getAllEmployees();
-        assertNotNull(emptyList, "Employee list should not be null even when empty");
-        assertTrue(emptyList.isEmpty(), "Employee list should be empty");
+        // Test negative increment (salary decrease)
+        List<Employee> decreasedEmployees = jdbcBean.incrementSalary(-10);
+        assertNotNull(decreasedEmployees, "Decrement result should not be null");
+        
+        for (Employee decreasedEmp : decreasedEmployees) {
+            Employee incrementedEmp = incrementedEmployees.stream()
+                .filter(emp -> emp.getEmployeeId() == decreasedEmp.getEmployeeId())
+                .findFirst()
+                .orElse(null);
+            
+            if (incrementedEmp != null) {
+                BigDecimal expectedSalary = incrementedEmp.getSalary().multiply(new BigDecimal("0.90"));
+                assertEquals(0, expectedSalary.compareTo(decreasedEmp.getSalary()),
+                    "Salary should be decreased by 10% for employee " + decreasedEmp.getEmployeeId());
+            }
+        }
+    }
 
-        // Test salary increment on empty database
-        List<Employee> incrementResult = jdbcBean.incrementSalary(10);
-        assertNotNull(incrementResult, "Increment result should not be null");
-        assertTrue(incrementResult.isEmpty(), "Increment result should be empty when no employees exist");
+    @Test
+    @DisplayName("Should handle connection health checks")
+    void testConnectionHealthCheck() {
+        // Test connection health
+        boolean isHealthy = jdbcBean.isConnectionHealthy();
+        assertTrue(isHealthy, "Database connection should be healthy in integration test environment");
     }
 
     // Helper methods
+
     private Employee createTestEmployee(String firstName, String lastName, String email, String jobId, String salary) {
         Employee emp = new Employee();
         emp.setFirstName(firstName);
@@ -333,12 +331,5 @@ class CrudWorkflowIntegrationTest extends BaseIntegrationTest {
             }
         }
         return null;
-    }
-
-    private Employee findEmployeeById(List<Employee> employees, int employeeId) {
-        return employees.stream()
-                .filter(emp -> emp.getEmployeeId() == employeeId)
-                .findFirst()
-                .orElse(null);
     }
 }

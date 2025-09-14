@@ -49,7 +49,7 @@ class JdbcBeanImplIntegrationTest {
     void setUp() throws SQLException {
         // Create a fresh database configuration for each test
         dbConfig = DatabaseConfig.getInstance();
-        jdbcBean = new JdbcBeanImpl(dbConfig);
+        jdbcBean = new JdbcBeanImpl();
         
         // Clean and set up test data
         setupTestData();

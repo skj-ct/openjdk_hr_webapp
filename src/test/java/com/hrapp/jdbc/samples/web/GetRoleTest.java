@@ -324,13 +324,15 @@ class GetRoleTest {
     @DisplayName("POST request should work same as GET")
     void testDoPost_SameAsGet() throws ServletException, IOException {
         // Arrange
+        when(mockRequest.getMethod()).thenReturn("POST");
         when(mockRequest.getUserPrincipal()).thenReturn(mockPrincipal);
         when(mockPrincipal.getName()).thenReturn("admin");
         when(mockRequest.isUserInRole("manager")).thenReturn(true);
         when(mockRequest.isUserInRole("staff")).thenReturn(false);
 
         // Act
-        getRoleServlet.doPost(mockRequest, mockResponse);
+        // Use service method instead of doPost directly since doPost is protected
+        getRoleServlet.service(mockRequest, mockResponse);
 
         // Assert
         verify(mockResponse).setContentType("application/json");

@@ -1,6 +1,6 @@
 package com.hrapp.jdbc.samples.bean;
 
-import com.hrapp.jdbc.samples.config.DatabaseConfig;
+import com.hrapp.jdbc.samples.config.ConnectionFactory;
 import com.hrapp.jdbc.samples.entity.Employee;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 class JdbcBeanImplSalaryIncrementTest {
 
     @Mock
-    private DatabaseConfig mockDbConfig;
+    private ConnectionFactory mockConnectionFactory;
     
     @Mock
     private Connection mockConnection;
@@ -46,7 +46,7 @@ class JdbcBeanImplSalaryIncrementTest {
 
     @BeforeEach
     void setUp() {
-        jdbcBean = new JdbcBeanImpl(mockDbConfig);
+        jdbcBean = new JdbcBeanImpl(mockConnectionFactory);
     }
 
     @ParameterizedTest
@@ -217,7 +217,7 @@ class JdbcBeanImplSalaryIncrementTest {
     void testIncrementSalary_DatabaseUnavailable_FallbackBehavior() throws SQLException {
         // Arrange
         int incrementPct = 15;
-        when(mockDbConfig.getConnection()).thenThrow(new SQLException("Database unavailable"));
+        when(mockConnectionFactory.getConnection()).thenThrow(new SQLException("Database unavailable"));
 
         // Act
         List<Employee> result = jdbcBean.incrementSalary(incrementPct);
@@ -260,7 +260,7 @@ class JdbcBeanImplSalaryIncrementTest {
     void testIncrementSalary_SQLExceptionDuringExecution() throws SQLException {
         // Arrange
         int incrementPct = 10;
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenThrow(new SQLException("Query execution failed"));
 
@@ -311,7 +311,7 @@ class JdbcBeanImplSalaryIncrementTest {
      * Helper method to set up mocks for increment salary operations
      */
     private void setupMockForIncrementSalary(int incrementPct) throws SQLException {
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
     }

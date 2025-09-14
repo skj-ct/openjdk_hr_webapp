@@ -1,6 +1,6 @@
 package com.hrapp.jdbc.samples.bean;
 
-import com.hrapp.jdbc.samples.config.DatabaseConfig;
+import com.hrapp.jdbc.samples.config.ConnectionFactory;
 import com.hrapp.jdbc.samples.entity.Employee;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.*;
 class JdbcBeanImplTest {
 
     @Mock
-    private DatabaseConfig mockDbConfig;
+    private ConnectionFactory mockConnectionFactory;
     
     @Mock
     private Connection mockConnection;
@@ -58,7 +58,7 @@ class JdbcBeanImplTest {
 
     @BeforeEach
     void setUp() {
-        jdbcBean = new JdbcBeanImpl(mockDbConfig);
+        jdbcBean = new JdbcBeanImpl(mockConnectionFactory);
     }
 
     @AfterEach
@@ -73,10 +73,10 @@ class JdbcBeanImplTest {
 
     @Test
     @Order(1)
-    @DisplayName("Constructor with DatabaseConfig should initialize properly")
-    void testConstructorWithDatabaseConfig() {
+    @DisplayName("Constructor with ConnectionFactory should initialize properly")
+    void testConstructorWithConnectionFactory() {
         // Act
-        JdbcBeanImpl bean = new JdbcBeanImpl(mockDbConfig);
+        JdbcBeanImpl bean = new JdbcBeanImpl(mockConnectionFactory);
 
         // Assert
         assertNotNull(bean);
@@ -87,7 +87,7 @@ class JdbcBeanImplTest {
 
     @Test
     @Order(2)
-    @DisplayName("Default constructor should initialize with default DatabaseConfig")
+    @DisplayName("Default constructor should initialize with default ConnectionFactory")
     void testDefaultConstructor() {
         // Act
         JdbcBeanImpl bean = new JdbcBeanImpl();
@@ -139,7 +139,7 @@ class JdbcBeanImplTest {
     @DisplayName("getEmployees should return sample data when database unavailable")
     void testGetEmployees_DatabaseUnavailable_ReturnsSampleData() throws SQLException {
         // Arrange
-        when(mockDbConfig.getConnection()).thenThrow(new SQLException("Connection failed"));
+        when(mockConnectionFactory.getConnection()).thenThrow(new SQLException("Connection failed"));
 
         // Act
         List<Employee> employees = jdbcBean.getEmployees();
@@ -380,7 +380,7 @@ class JdbcBeanImplTest {
         Employee newEmployee = new Employee(0, "Test", "User", "test@company.com", 
                                           "555-0000", "IT_PROG", new BigDecimal("50000.00"));
         
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenThrow(new SQLException("Database error"));
 
@@ -437,7 +437,7 @@ class JdbcBeanImplTest {
     void testDeleteEmployee_DatabaseError() throws SQLException {
         // Arrange
         int employeeId = 1;
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeUpdate()).thenThrow(new SQLException("Database error"));
 
@@ -482,32 +482,32 @@ class JdbcBeanImplTest {
 
     @Test
     @Order(60)
-    @DisplayName("isConnectionHealthy should delegate to DatabaseConfig")
+    @DisplayName("isConnectionHealthy should delegate to ConnectionFactory")
     void testIsConnectionHealthy() {
         // Arrange
-        when(mockDbConfig.isHealthy()).thenReturn(true);
+        when(mockConnectionFactory.isHealthy()).thenReturn(true);
 
         // Act
         boolean healthy = jdbcBean.isConnectionHealthy();
 
         // Assert
         assertTrue(healthy);
-        verify(mockDbConfig).isHealthy();
+        verify(mockConnectionFactory).isHealthy();
     }
 
     @Test
     @Order(61)
-    @DisplayName("isConnectionHealthy should return false when DatabaseConfig reports unhealthy")
+    @DisplayName("isConnectionHealthy should return false when ConnectionFactory reports unhealthy")
     void testIsConnectionHealthy_Unhealthy() {
         // Arrange
-        when(mockDbConfig.isHealthy()).thenReturn(false);
+        when(mockConnectionFactory.isHealthy()).thenReturn(false);
 
         // Act
         boolean healthy = jdbcBean.isConnectionHealthy();
 
         // Assert
         assertFalse(healthy);
-        verify(mockDbConfig).isHealthy();
+        verify(mockConnectionFactory).isHealthy();
     }
 
     // ========================================
@@ -530,7 +530,7 @@ class JdbcBeanImplTest {
         });
 
         // Assert - Verify multiple connections were requested
-        verify(mockDbConfig, atLeast(3)).getConnection();
+        verify(mockConnectionFactory, atLeast(3)).getConnection();
     }
 
     // ========================================
@@ -538,34 +538,34 @@ class JdbcBeanImplTest {
     // ========================================
 
     private void setupMockForSuccessfulQuery() throws SQLException {
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.createStatement()).thenReturn(mockStatement);
         when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
         when(mockResultSet.next()).thenReturn(true, false);
     }
 
     private void setupMockForPreparedStatement() throws SQLException {
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
         when(mockResultSet.next()).thenReturn(true, false);
     }
 
     private void setupMockForUpdateOperation() throws SQLException {
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
         when(mockResultSet.next()).thenReturn(true);
     }
 
     private void setupMockForCreateOperation() throws SQLException {
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
     }
 
     private void setupMockForDeleteOperation() throws SQLException {
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
     }
 

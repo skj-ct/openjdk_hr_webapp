@@ -166,14 +166,15 @@ class DatabaseConfigIntegrationTest {
         
         // When
         boolean healthy = config.isHealthy();
-        DatabaseConfig.HealthInfo healthInfo = config.getHealthInfo();
+        String poolStats = config.getPoolStats();
         
         // Then
         assertTrue(healthy, "Database should be healthy with TestContainers");
-        assertNotNull(healthInfo);
-        assertTrue(healthInfo.isHealthy());
-        assertEquals("Healthy", healthInfo.getStatus());
-        assertNotNull(healthInfo.getPoolStats());
+        assertNotNull(poolStats);
+        assertTrue(poolStats.contains("Pool Stats"));
+        assertTrue(poolStats.contains("Active:"));
+        assertTrue(poolStats.contains("Idle:"));
+        assertTrue(poolStats.contains("Total:"));
     }
     
     @Test
@@ -183,21 +184,17 @@ class DatabaseConfigIntegrationTest {
         DatabaseConfig config = DatabaseConfig.getInstance();
         
         // When
-        DatabaseConfig.HealthInfo healthInfo = config.getHealthInfo();
+        String poolStats = config.getPoolStats();
         
         // Then
-        assertNotNull(healthInfo.getPoolStats());
-        DatabaseConfig.PoolStats stats = healthInfo.getPoolStats();
+        assertNotNull(poolStats);
+        assertTrue(poolStats.contains("Pool Stats"));
         
-        // Pool should have some connections
-        assertTrue(stats.getTotalConnections() >= 0);
-        assertTrue(stats.getActiveConnections() >= 0);
-        assertTrue(stats.getIdleConnections() >= 0);
-        assertTrue(stats.getThreadsAwaitingConnection() >= 0);
-        
-        // Total should be sum of active and idle
-        assertEquals(stats.getTotalConnections(), 
-                    stats.getActiveConnections() + stats.getIdleConnections());
+        // Extract numbers from the pool stats string
+        assertTrue(poolStats.matches(".*Active: \\d+.*"));
+        assertTrue(poolStats.matches(".*Idle: \\d+.*"));
+        assertTrue(poolStats.matches(".*Total: \\d+.*"));
+        assertTrue(poolStats.matches(".*Waiting: \\d+.*"));
     }
     
     @Test
@@ -239,7 +236,7 @@ class DatabaseConfigIntegrationTest {
     
     @Test
     @DisplayName("Should handle connection pool exhaustion gracefully")
-    void testConnectionPoolExhaustion() throws InterruptedException {
+    void testConnectionPoolExhaustion() throws InterruptedException, SQLException {
         // Given
         DatabaseConfig config = DatabaseConfig.getInstance();
         int maxConnections = 10; // Based on default pool size

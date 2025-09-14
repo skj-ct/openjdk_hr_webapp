@@ -1,6 +1,6 @@
 package com.hrapp.jdbc.samples.bean;
 
-import com.hrapp.jdbc.samples.config.DatabaseConfig;
+import com.hrapp.jdbc.samples.config.ConnectionFactory;
 import com.hrapp.jdbc.samples.entity.Employee;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 class JdbcBeanImplCrudTest {
 
     @Mock
-    private DatabaseConfig mockDbConfig;
+    private ConnectionFactory mockConnectionFactory;
     
     @Mock
     private Connection mockConnection;
@@ -44,7 +44,7 @@ class JdbcBeanImplCrudTest {
 
     @BeforeEach
     void setUp() {
-        jdbcBean = new JdbcBeanImpl(mockDbConfig);
+        jdbcBean = new JdbcBeanImpl(mockConnectionFactory);
     }
 
     // CREATE OPERATION TESTS
@@ -56,7 +56,7 @@ class JdbcBeanImplCrudTest {
         Employee newEmployee = new Employee(0, "Alice", "Johnson", "alice.johnson@company.com", 
                                           "555-7777", "IT_PROG", new BigDecimal("70000.00"));
         
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
         when(mockResultSet.next()).thenReturn(true);
@@ -91,7 +91,7 @@ class JdbcBeanImplCrudTest {
         Employee newEmployee = new Employee(0, "Test", "User", "test@company.com", 
                                           "555-0000", "IT_PROG", new BigDecimal("50000.00"));
         
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenThrow(new SQLException("Database error"));
 
@@ -111,7 +111,7 @@ class JdbcBeanImplCrudTest {
         Employee newEmployee = new Employee(0, "Test", "User", "test@company.com", 
                                           "555-0000", "IT_PROG", new BigDecimal("50000.00"));
         
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
         when(mockResultSet.next()).thenReturn(false); // No generated ID
@@ -153,7 +153,7 @@ class JdbcBeanImplCrudTest {
     void testGetEmployee_Found() throws SQLException {
         // Arrange
         int empId = 1;
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
         
@@ -175,7 +175,7 @@ class JdbcBeanImplCrudTest {
     void testGetEmployee_NotFound() throws SQLException {
         // Arrange
         int empId = 999;
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
         when(mockResultSet.next()).thenReturn(false);
@@ -193,7 +193,7 @@ class JdbcBeanImplCrudTest {
     void testGetEmployeeByFn_MultipleResults() throws SQLException {
         // Arrange
         String firstName = "J";
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
         
@@ -217,7 +217,7 @@ class JdbcBeanImplCrudTest {
     void testGetEmployeeByFn_NoResults() throws SQLException {
         // Arrange
         String firstName = "Z";
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
         when(mockResultSet.next()).thenReturn(false);
@@ -237,7 +237,7 @@ class JdbcBeanImplCrudTest {
     void testUpdateEmployeeById_Success() throws SQLException {
         // Arrange
         int empId = 1;
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         
         // Mock update operation
@@ -262,7 +262,7 @@ class JdbcBeanImplCrudTest {
     void testUpdateEmployeeById_NotFound() throws SQLException {
         // Arrange
         int empId = 999;
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeUpdate()).thenReturn(0); // No rows updated
 
@@ -280,7 +280,7 @@ class JdbcBeanImplCrudTest {
         Employee employee = new Employee(1, "Updated", "Name", "updated@company.com", 
                                        "555-9999", "SA_MAN", new BigDecimal("85000.00"));
         
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeUpdate()).thenReturn(1);
 
@@ -308,7 +308,7 @@ class JdbcBeanImplCrudTest {
         Employee employee = new Employee(999, "NonExistent", "User", "nonexistent@company.com", 
                                        "555-0000", "IT_PROG", new BigDecimal("50000.00"));
         
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeUpdate()).thenReturn(0); // No rows updated
 
@@ -326,7 +326,7 @@ class JdbcBeanImplCrudTest {
         Employee employee = new Employee(1, "Test", "User", "test@company.com", 
                                        "555-0000", "IT_PROG", new BigDecimal("50000.00"));
         
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeUpdate()).thenThrow(new SQLException("Database error"));
 
@@ -345,7 +345,7 @@ class JdbcBeanImplCrudTest {
     void testDeleteEmployee_Success() throws SQLException {
         // Arrange
         int empId = 1;
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeUpdate()).thenReturn(1);
 
@@ -362,7 +362,7 @@ class JdbcBeanImplCrudTest {
     void testDeleteEmployee_NotFound() throws SQLException {
         // Arrange
         int empId = 999;
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeUpdate()).thenReturn(0);
 
@@ -378,7 +378,7 @@ class JdbcBeanImplCrudTest {
     void testDeleteEmployee_DatabaseError() throws SQLException {
         // Arrange
         int empId = 1;
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeUpdate()).thenThrow(new SQLException("Database error"));
 
@@ -396,28 +396,28 @@ class JdbcBeanImplCrudTest {
     @DisplayName("Connection Health Check - Healthy")
     void testIsConnectionHealthy_Healthy() {
         // Arrange
-        when(mockDbConfig.isHealthy()).thenReturn(true);
+        when(mockConnectionFactory.isHealthy()).thenReturn(true);
 
         // Act
         boolean healthy = jdbcBean.isConnectionHealthy();
 
         // Assert
         assertTrue(healthy);
-        verify(mockDbConfig).isHealthy();
+        verify(mockConnectionFactory).isHealthy();
     }
 
     @Test
     @DisplayName("Connection Health Check - Unhealthy")
     void testIsConnectionHealthy_Unhealthy() {
         // Arrange
-        when(mockDbConfig.isHealthy()).thenReturn(false);
+        when(mockConnectionFactory.isHealthy()).thenReturn(false);
 
         // Act
         boolean healthy = jdbcBean.isConnectionHealthy();
 
         // Assert
         assertFalse(healthy);
-        verify(mockDbConfig).isHealthy();
+        verify(mockConnectionFactory).isHealthy();
     }
 
     // FALLBACK BEHAVIOR TESTS
@@ -426,7 +426,7 @@ class JdbcBeanImplCrudTest {
     @DisplayName("Read Operations - Database Unavailable - Fallback to Sample Data")
     void testReadOperations_DatabaseUnavailable_FallbackBehavior() throws SQLException {
         // Arrange
-        when(mockDbConfig.getConnection()).thenThrow(new SQLException("Database unavailable"));
+        when(mockConnectionFactory.getConnection()).thenThrow(new SQLException("Database unavailable"));
 
         // Act - Test all read operations
         List<Employee> allEmployees = jdbcBean.getEmployees();
@@ -448,7 +448,7 @@ class JdbcBeanImplCrudTest {
     // Helper methods
 
     private void setupMockForReadOperations() throws SQLException {
-        when(mockDbConfig.getConnection()).thenReturn(mockConnection);
+        when(mockConnectionFactory.getConnection()).thenReturn(mockConnection);
         when(mockConnection.createStatement()).thenReturn(mock(java.sql.Statement.class));
         when(mockConnection.createStatement().executeQuery(anyString())).thenReturn(mockResultSet);
     }
