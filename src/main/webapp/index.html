@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Web Application - Employee Management</title>
+    <link rel="stylesheet" type="text/css" href="css/app.css">
+    <style>
+        iframe:focus {
+            outline: none;
+        }
+
+        iframe[seamless] {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    <div id="sideNav" class="sidenav">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a href="javascript:switchSrc('listAll.html')" class="staff">
+            📋 List All Employees
+        </a>
+        <a href="javascript:switchSrc('listById.html')" class="staff">
+            🔍 Search By ID
+        </a>
+        <a href="javascript:switchSrc('listByName.html')" class="manager">
+            ✏️ Update Employee Record
+        </a>
+        <a href="javascript:switchSrc('incrementSalary.html')" class="manager">
+            💰 Increment Salary
+        </a>
+        <a href="javascript:switchSrc('about.html')">
+            ℹ️ About
+        </a>
+    </div>
+
+    <!-- Main Content Area -->
+    <div id="main">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title" onclick="openNav()">
+                <span class="menu-icon">☰</span>
+                HR Web Application
+            </div>
+
+            <div class="user-info">
+                <div id="myrole">Loading...</div>
+                <a href="javascript:void(0)" onclick="logout()" class="logout-btn">
+                    Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Content Frame -->
+        <div>
+            <iframe id="content" src="about.html" frameborder="0" style="overflow:hidden;height:100%;width:100%"
+                height="100%" width="100%">
+            </iframe>
+        </div>
+    </div>
+
+    <script>
+        // Navigation Functions
+        function openNav() {
+            document.getElementById("sideNav").style.width = "280px";
+            document.getElementById("main").style.marginLeft = "280px";
+        }
+
+        function closeNav() {
+            document.getElementById("sideNav").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+        }
+
+        function switchSrc(src) {
+            const iframe = document.getElementById('content');
+            iframe.src = src;
+
+            // Close sidebar on mobile after selection
+            if (window.innerWidth <= 768) {
+                closeNav();
+            }
+        }
+
+        // Logout Function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = 'logout.html';
+            }
+        }
+
+        // Get User Role and Setup UI
+        function getUserRole() {
+            const xmlhttp = new XMLHttpRequest();
+            const url = "getrole";
+
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+                    const role = xmlhttp.responseText.trim();
+                    console.log("User role: " + role);
+
+                    // Update role display
+                    document.getElementById('myrole').innerHTML = role;
+
+                    // Hide manager-only features for staff
+                    if (role === "staff") {
+                        console.log("Hiding manager features for staff user");
+                        const managerElements = document.getElementsByClassName('manager');
+                        for (let i = 0; i < managerElements.length; i++) {
+                            managerElements[i].style.display = 'none';
+                        }
+                    }
+                } else if (xmlhttp.readyState === 4) {
+                    console.error("Failed to get user role");
+                    document.getElementById('myrole').innerHTML = 'Error';
+                }
+            };
+
+            xmlhttp.open("GET", url, true);
+            xmlhttp.send();
+        }
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', function () {
+            getUserRole();
+
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function (e) {
+                // ESC to close sidebar
+                if (e.key === 'Escape') {
+                    closeNav();
+                }
+                // Alt + M to open menu
+                if (e.altKey && e.key === 'm') {
+                    openNav();
+                }
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', function () {
+                if (window.innerWidth <= 768) {
+                    closeNav();
+                }
+            });
+        });
+
+        // Error handling for iframe
+        document.getElementById('content').onerror = function () {
+            console.error('Failed to load content');
+            this.src = 'about.html';
+        };
+    </script>
+</body>
+
+</html>

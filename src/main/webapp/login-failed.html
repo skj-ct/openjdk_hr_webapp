@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Failed - HR Web Application</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-form fade-in">
+            <div class="text-center mb-20">
+                <div style="font-size: 48px; color: #e74c3c; margin-bottom: 20px;">🚫</div>
+                <h2 style="color: #e74c3c; margin-bottom: 10px;">Login Failed</h2>
+                <p style="color: #7f8c8d;">Invalid username or password. Please try again.</p>
+            </div>
+            
+            <div class="alert alert-danger">
+                <strong>Authentication Error:</strong> The credentials you provided are incorrect.
+            </div>
+            
+            <div class="text-center">
+                <a href="login.html" class="btn btn-lg" style="width: 100%; margin-bottom: 15px;">
+                    🔄 Try Again
+                </a>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <small style="color: #7f8c8d;">
+                        <strong>Valid Credentials:</strong><br>
+                        Manager: <code>admin/admin123</code><br>
+                        Staff: <code>hr/hr123</code>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-redirect to login page after 5 seconds
+        let countdown = 5;
+        const redirectTimer = setInterval(() => {
+            countdown--;
+            if (countdown <= 0) {
+                clearInterval(redirectTimer);
+                window.location.href = 'login.html';
+            }
+        }, 1000);
+
+        // Add click handler for immediate redirect
+        document.addEventListener('DOMContentLoaded', function() {
+            const tryAgainBtn = document.querySelector('a[href="login.html"]');
+            tryAgainBtn.addEventListener('click', function() {
+                clearInterval(redirectTimer);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - HR Web Application</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-form fade-in">
+            <div class="text-center mb-20">
+                <div style="font-size: 48px; color: #f39c12; margin-bottom: 20px;">🔍</div>
+                <h2 style="color: #f39c12; margin-bottom: 10px;">Page Not Found</h2>
+                <p style="color: #7f8c8d;">The page you're looking for doesn't exist.</p>
+            </div>
+            
+            <div class="alert alert-warning">
+                <strong>Error 404:</strong> The requested resource could not be found.
+            </div>
+            
+            <div class="text-center">
+                <a href="index.html" class="btn btn-lg" style="width: 100%; margin-bottom: 15px;">
+                    🏠 Go to Home
+                </a>
+                <a href="javascript:history.back()" class="btn btn-default btn-lg" style="width: 100%;">
+                    ← Go Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Log the error for debugging
+            console.error('404 Error: Page not found -', window.location.href);
+        });
+    </script>
+</body>
+</html>

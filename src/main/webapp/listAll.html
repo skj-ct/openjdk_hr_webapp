@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Employees - HR Web Application</title>
+    <link rel="stylesheet" type="text/css" href="css/app.css">
+</head>
+<body>
+    <div class="content-container fade-in">
+        <h2 class="page-title">All Employees</h2>
+        
+        <div id="loading" class="text-center" style="display: none;">
+            <div class="loading"></div>
+            <p>Loading employee data...</p>
+        </div>
+        
+        <div id="error-message" style="display: none;"></div>
+        
+        <div id="employee-list"></div>
+    </div>
+
+    <script>
+        // Load employee data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEmployees();
+        });
+
+        function loadEmployees() {
+            showLoading(true);
+            
+            const xmlhttp = new XMLHttpRequest();
+            const url = "WebController";
+
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState === 4) {
+                    showLoading(false);
+                    
+                    if (xmlhttp.status === 200) {
+                        try {
+                            processResponse(xmlhttp.responseText);
+                        } catch (error) {
+                            showError("Error processing employee data: " + error.message);
+                        }
+                    } else {
+                        showError("Failed to load employee data. Please try again.");
+                    }
+                }
+            };
+
+            xmlhttp.onerror = function() {
+                showLoading(false);
+                showError("Network error. Please check your connection and try again.");
+            };
+
+            xmlhttp.open("GET", url, true);
+            xmlhttp.send();
+        }
+
+        function processResponse(response) {
+            try {
+                const employees = JSON.parse(response);
+                
+                if (!employees || employees.length === 0) {
+                    showError("No employee records found.");
+                    return;
+                }
+
+                let tableHtml = '<table class="fade-in">';
+                const keys = Object.keys(employees[0]);
+
+                // Create table headers
+                tableHtml += '<thead><tr>';
+                keys.forEach(key => {
+                    tableHtml += `<th>${formatColumnName(key)}</th>`;
+                });
+                tableHtml += '</tr></thead>';
+
+                // Create table body
+                tableHtml += '<tbody>';
+                employees.forEach((employee, index) => {
+                    tableHtml += '<tr>';
+                    keys.forEach(key => {
+                        let value = employee[key];
+                        if (key.toLowerCase().includes('salary')) {
+                            value = formatCurrency(value);
+                        } else if (key.toLowerCase().includes('date')) {
+                            value = formatDate(value);
+                        }
+                        tableHtml += `<td>${value || 'N/A'}</td>`;
+                    });
+                    tableHtml += '</tr>';
+                });
+                tableHtml += '</tbody></table>';
+
+                // Add summary
+                const summaryHtml = `
+                    <div class="alert alert-success">
+                        <strong>Total Employees:</strong> ${employees.length}
+                    </div>
+                `;
+
+                document.getElementById("employee-list").innerHTML = summaryHtml + tableHtml;
+                hideError();
+                
+            } catch (error) {
+                showError("Error parsing employee data: " + error.message);
+            }
+        }
+
+        function formatColumnName(columnName) {
+            return columnName
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function formatCurrency(amount) {
+            if (!amount) return 'N/A';
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString();
+            } catch {
+                return dateString;
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <strong>Error:</strong> ${message}
+                    <button onclick="loadEmployees()" class="btn" style="margin-left: 10px;">
+                        Retry
+                    </button>
+                </div>
+            `;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error-message').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

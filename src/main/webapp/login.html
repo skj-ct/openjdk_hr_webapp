@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - HR Web Application</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-form fade-in">
+            <h2 class="login-title">HR Web Application</h2>
+            <p class="text-center mb-20" style="color: #7f8c8d;">Please sign in to continue</p>
+            
+            <form method="POST" action="j_security_check" id="loginForm">
+                <div class="form-group">
+                    <label for="j_username">Username:</label>
+                    <input type="text" 
+                           id="j_username" 
+                           name="j_username" 
+                           required 
+                           placeholder="Enter your username"
+                           autocomplete="username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="j_password">Password:</label>
+                    <input type="password" 
+                           id="j_password" 
+                           name="j_password" 
+                           required 
+                           placeholder="Enter your password"
+                           autocomplete="current-password">
+                </div>
+                
+                <div class="form-group">
+                    <input type="submit" value="Sign In" class="btn btn-lg" style="width: 100%;" id="submitBtn">
+                </div>
+            </form>
+            
+            <div class="text-center mt-20">
+                <small style="color: #7f8c8d;">
+                    Use credentials: <strong>admin/admin123</strong> or <strong>hr/hr123</strong>
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            form.addEventListener('submit', function() {
+                submitBtn.value = 'Signing In...';
+                submitBtn.disabled = true;
+                
+                // Re-enable after 10 seconds in case of issues
+                setTimeout(function() {
+                    submitBtn.value = 'Sign In';
+                    submitBtn.disabled = false;
+                }, 10000);
+            });
+            
+            // Add focus effects
+            const inputs = document.querySelectorAll('input[type="text"], input[type="password"]');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                    this.parentElement.style.transition = 'transform 0.2s ease';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

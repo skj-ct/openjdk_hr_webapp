@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee 
+         https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <display-name>HR Web Application - OpenJDK Migration</display-name>
+    <description>Employee management web application migrated from Oracle to OpenJDK/PostgreSQL</description>
+
+    <!-- Servlet Definitions -->
+    <servlet>
+        <servlet-name>WebController</servlet-name>
+        <servlet-class>com.hrapp.jdbc.samples.web.WebController</servlet-class>
+    </servlet>
+    
+    <servlet>
+        <servlet-name>GetRole</servlet-name>
+        <servlet-class>com.hrapp.jdbc.samples.web.GetRole</servlet-class>
+    </servlet>
+    
+    <servlet>
+        <servlet-name>SimpleLogoutServlet</servlet-name>
+        <servlet-class>com.hrapp.jdbc.samples.web.SimpleLogoutServlet</servlet-class>
+    </servlet>
+
+    <!-- Servlet Mappings -->
+    <servlet-mapping>
+        <servlet-name>WebController</servlet-name>
+        <url-pattern>/WebController</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>GetRole</servlet-name>
+        <url-pattern>/getrole</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>SimpleLogoutServlet</servlet-name>
+        <url-pattern>/simplelogout</url-pattern>
+    </servlet-mapping>
+
+    <!-- Security Roles -->
+    <security-role>
+        <role-name>manager</role-name>
+    </security-role>
+    <security-role>
+        <role-name>staff</role-name>
+    </security-role>
+
+    <!-- Security Constraints -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Protected Resources</web-resource-name>
+            <url-pattern>/WebController</url-pattern>
+            <url-pattern>/getrole</url-pattern>
+            <url-pattern>/simplelogout</url-pattern>
+            <url-pattern>/index.html</url-pattern>
+            <url-pattern>/listAll.html</url-pattern>
+            <url-pattern>/listById.html</url-pattern>
+            <url-pattern>/listByName.html</url-pattern>
+            <url-pattern>/incrementSalary.html</url-pattern>
+            <url-pattern>/about.html</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>manager</role-name>
+            <role-name>staff</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <!-- Form-based Authentication -->
+    <login-config>
+        <auth-method>FORM</auth-method>
+        <form-login-config>
+            <form-login-page>/login.html</form-login-page>
+            <form-error-page>/login-failed.html</form-error-page>
+        </form-login-config>
+    </login-config>
+
+    <!-- Session Configuration -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+        <cookie-config>
+            <http-only>true</http-only>
+            <secure>false</secure>
+        </cookie-config>
+    </session-config>
+
+    <!-- Welcome Files -->
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+        <welcome-file>login.html</welcome-file>
+    </welcome-file-list>
+
+    <!-- Error Pages -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error-404.html</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error-500.html</location>
+    </error-page>
+
+</web-app>

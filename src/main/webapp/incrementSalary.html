@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Increment Salary - HR Web Application</title>
+    <link rel="stylesheet" type="text/css" href="css/app.css">
+</head>
+<body>
+    <div class="content-container fade-in">
+        <h2 class="page-title">Salary Increment</h2>
+        
+        <div class="form-container">
+            <div class="form-group">
+                <label for="incrementField">Salary Increment Percentage:</label>
+                <input id="incrementField" 
+                       type="number" 
+                       max="100" 
+                       min="1" 
+                       step="0.1"
+                       placeholder="Enter percentage (1-100)"
+                       required>
+                <small style="color: #7f8c8d;">Enter the percentage increase for all employee salaries</small>
+            </div>
+            
+            <div id="buttonContainer" class="text-center">
+                <button type="button" class="btn btn-info btn-lg" onclick="confirmUpdate()">
+                    💰 Increment Salaries
+                </button>
+                <button type="button" class="btn btn-default btn-lg" onclick="cancelUpdate()">
+                    ❌ Cancel
+                </button>
+            </div>
+        </div>
+
+        <div id="loading" class="text-center" style="display: none;">
+            <div class="loading"></div>
+            <p>Processing salary increment...</p>
+        </div>
+        
+        <div id="error-message" style="display: none;"></div>
+        
+        <div id="result-container" style="display: none;">
+            <h3>Updated Employee Records</h3>
+            <div id="employee-results"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add input validation
+            const incrementField = document.getElementById('incrementField');
+            
+            incrementField.addEventListener('input', function() {
+                validateInput();
+            });
+            
+            incrementField.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    confirmUpdate();
+                }
+            });
+        });
+
+        function validateInput() {
+            const incrementField = document.getElementById('incrementField');
+            const value = parseFloat(incrementField.value);
+            
+            if (isNaN(value) || value < 1 || value > 100) {
+                incrementField.style.borderColor = '#e74c3c';
+                return false;
+            } else {
+                incrementField.style.borderColor = '#27ae60';
+                return true;
+            }
+        }
+
+        function confirmUpdate() {
+            const incrementField = document.getElementById('incrementField');
+            const increment = incrementField.value.trim();
+            
+            if (!increment) {
+                showError("Please enter a salary increment percentage.");
+                incrementField.focus();
+                return;
+            }
+            
+            const incrementValue = parseFloat(increment);
+            if (isNaN(incrementValue) || incrementValue < 1 || incrementValue > 100) {
+                showError("Please enter a valid percentage between 1 and 100.");
+                incrementField.focus();
+                return;
+            }
+            
+            const confirmMessage = `Are you sure you want to increment all employee salaries by ${incrementValue}%?\n\nThis action cannot be undone.`;
+            
+            if (confirm(confirmMessage)) {
+                processSalaryIncrement(incrementValue);
+            }
+        }
+
+        function processSalaryIncrement(increment) {
+            showLoading(true);
+            hideError();
+            document.getElementById('buttonContainer').style.display = 'none';
+            
+            const xmlhttp = new XMLHttpRequest();
+            const url = "WebController?incrementPct=" + encodeURIComponent(increment);
+            
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState === 4) {
+                    showLoading(false);
+                    
+                    if (xmlhttp.status === 200) {
+                        try {
+                            processResponse(xmlhttp.responseText, increment);
+                        } catch (error) {
+                            showError("Error processing salary increment: " + error.message);
+                            resetForm();
+                        }
+                    } else {
+                        showError("Failed to process salary increment. Please try again.");
+                        resetForm();
+                    }
+                }
+            };
+
+            xmlhttp.onerror = function() {
+                showLoading(false);
+                showError("Network error. Please check your connection and try again.");
+                resetForm();
+            };
+
+            xmlhttp.open("POST", url, true);
+            xmlhttp.send();
+        }
+
+        function processResponse(response, increment) {
+            try {
+                const employees = JSON.parse(response);
+                
+                if (!employees || employees.length === 0) {
+                    showError("No employee records were updated.");
+                    resetForm();
+                    return;
+                }
+
+                // Show success message
+                const successHtml = `
+                    <div class="alert alert-success">
+                        <strong>Success!</strong> Salary increment of ${increment}% has been applied to ${employees.length} employees.
+                    </div>
+                `;
+
+                // Create updated employee table
+                let tableHtml = '<table class="fade-in">';
+                const keys = Object.keys(employees[0]);
+
+                // Create table headers
+                tableHtml += '<thead><tr>';
+                keys.forEach(key => {
+                    tableHtml += `<th>${formatColumnName(key)}</th>`;
+                });
+                tableHtml += '</tr></thead>';
+
+                // Create table body
+                tableHtml += '<tbody>';
+                employees.forEach(employee => {
+                    tableHtml += '<tr>';
+                    keys.forEach(key => {
+                        let value = employee[key];
+                        if (key.toLowerCase().includes('salary')) {
+                            value = formatCurrency(value);
+                        }
+                        tableHtml += `<td>${value || 'N/A'}</td>`;
+                    });
+                    tableHtml += '</tr>';
+                });
+                tableHtml += '</tbody></table>';
+
+                document.getElementById("employee-results").innerHTML = successHtml + tableHtml;
+                document.getElementById("result-container").style.display = 'block';
+                
+                // Add reset button
+                const resetButton = `
+                    <div class="text-center mt-20">
+                        <button type="button" class="btn btn-default" onclick="resetForm()">
+                            🔄 Process Another Increment
+                        </button>
+                    </div>
+                `;
+                document.getElementById("employee-results").innerHTML += resetButton;
+                
+            } catch (error) {
+                showError("Error parsing response: " + error.message);
+                resetForm();
+            }
+        }
+
+        function cancelUpdate() {
+            if (confirm("Are you sure you want to cancel?")) {
+                resetForm();
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('incrementField').value = '';
+            document.getElementById('incrementField').style.borderColor = '#e0e0e0';
+            document.getElementById('buttonContainer').style.display = 'block';
+            document.getElementById('result-container').style.display = 'none';
+            hideError();
+        }
+
+        function formatColumnName(columnName) {
+            return columnName
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function formatCurrency(amount) {
+            if (!amount) return 'N/A';
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error-message').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

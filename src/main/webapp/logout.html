@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logging out...</title>
+</head>
+<body>
+    <div style="text-align: center; margin-top: 100px; font-family: Arial;">
+        <h2>Logging out...</h2>
+        <p>Please wait while we log you out securely.</p>
+    </div>
+    
+    <script>
+        // Use the new simple logout servlet
+        fetch('simplelogout', {
+            method: 'GET',
+            credentials: 'same-origin'
+        }).then(response => {
+            return response.json();
+        }).then(data => {
+            console.log('Logout successful:', data);
+        }).catch(error => {
+            console.log('Logout completed');
+        }).finally(() => {
+            // Always redirect to login
+            setTimeout(() => {
+                window.location.replace('login.html');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

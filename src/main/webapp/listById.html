@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Employee by ID - HR Web Application</title>
+    <link rel="stylesheet" type="text/css" href="css/app.css">
+</head>
+<body>
+    <div class="content-container fade-in">
+        <h2 class="page-title">Search Employee by ID</h2>
+        
+        <div class="form-container">
+            <div class="form-group">
+                <label for="employeeId">Employee ID:</label>
+                <input id="employeeId" 
+                       type="number" 
+                       min="1"
+                       placeholder="Enter employee ID"
+                       onkeypress="return waitForEnter(event)"
+                       required>
+                <small style="color: #7f8c8d;">Press Enter to search or click the Search button</small>
+            </div>
+            
+            <div class="text-center">
+                <button type="button" class="btn btn-info" onclick="searchEmployee()">
+                    🔍 Search Employee
+                </button>
+                <button type="button" class="btn btn-default" onclick="clearSearch()">
+                    🗑️ Clear
+                </button>
+            </div>
+        </div>
+
+        <div id="loading" class="text-center" style="display: none;">
+            <div class="loading"></div>
+            <p>Searching for employee...</p>
+        </div>
+        
+        <div id="error-message" style="display: none;"></div>
+        
+        <div id="employee-result"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('employeeId').focus();
+        });
+
+        function waitForEnter(event) {
+            if (event.keyCode === 13) {
+                searchEmployee();
+                return false;
+            }
+            return true;
+        }
+
+        function searchEmployee() {
+            const employeeIdInput = document.getElementById('employeeId');
+            const employeeId = employeeIdInput.value.trim();
+            
+            if (!employeeId) {
+                showError("Please enter an employee ID.");
+                employeeIdInput.focus();
+                return;
+            }
+            
+            const id = parseInt(employeeId);
+            if (isNaN(id) || id < 1) {
+                showError("Please enter a valid employee ID (positive number).");
+                employeeIdInput.focus();
+                return;
+            }
+            
+            fetchEmployee(id);
+        }
+
+        function fetchEmployee(employeeId) {
+            showLoading(true);
+            hideError();
+            
+            const xmlhttp = new XMLHttpRequest();
+            const url = "WebController?id=" + encodeURIComponent(employeeId);
+
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState === 4) {
+                    showLoading(false);
+                    
+                    if (xmlhttp.status === 200) {
+                        try {
+                            processResponse(xmlhttp.responseText);
+                        } catch (error) {
+                            showError("Error processing employee data: " + error.message);
+                        }
+                    } else if (xmlhttp.status === 404) {
+                        showError("Employee not found with ID: " + employeeId);
+                    } else {
+                        showError("Failed to search for employee. Please try again.");
+                    }
+                }
+            };
+
+            xmlhttp.onerror = function() {
+                showLoading(false);
+                showError("Network error. Please check your connection and try again.");
+            };
+
+            xmlhttp.open("GET", url, true);
+            xmlhttp.send();
+        }
+
+        function processResponse(response) {
+            try {
+                const employees = JSON.parse(response);
+                
+                if (!employees || employees.length === 0) {
+                    showError("No employee found with the specified ID.");
+                    return;
+                }
+
+                const employee = employees[0]; // Should be only one employee
+                
+                // Create employee details card
+                let detailsHtml = `
+                    <div class="alert alert-success">
+                        <strong>Employee Found!</strong> Details are shown below.
+                    </div>
+                    <div class="form-container fade-in">
+                        <h3 style="color: var(--primary-color); margin-bottom: 20px;">Employee Details</h3>
+                `;
+
+                const keys = Object.keys(employee);
+                keys.forEach(key => {
+                    let value = employee[key];
+                    let displayName = formatColumnName(key);
+                    
+                    if (key.toLowerCase().includes('salary')) {
+                        value = formatCurrency(value);
+                    } else if (key.toLowerCase().includes('date')) {
+                        value = formatDate(value);
+                    }
+                    
+                    detailsHtml += `
+                        <div class="form-group">
+                            <label><strong>${displayName}:</strong></label>
+                            <div style="padding: 10px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid var(--secondary-color);">
+                                ${value || 'N/A'}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                detailsHtml += `
+                    </div>
+                    <div class="text-center mt-20">
+                        <button type="button" class="btn btn-default" onclick="clearSearch()">
+                            🔍 Search Another Employee
+                        </button>
+                    </div>
+                `;
+
+                document.getElementById("employee-result").innerHTML = detailsHtml;
+                
+            } catch (error) {
+                showError("Error parsing employee data: " + error.message);
+            }
+        }
+
+        function clearSearch() {
+            document.getElementById('employeeId').value = '';
+            document.getElementById('employee-result').innerHTML = '';
+            document.getElementById('employeeId').focus();
+            hideError();
+        }
+
+        function formatColumnName(columnName) {
+            return columnName
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function formatCurrency(amount) {
+            if (!amount) return 'N/A';
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString();
+            } catch {
+                return dateString;
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error-message').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
