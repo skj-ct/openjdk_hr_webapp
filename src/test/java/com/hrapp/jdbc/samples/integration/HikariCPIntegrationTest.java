@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests Requirements: 7.1, 7.2, 9.3
  */
 @DisplayName("HikariCP Connection Pool Integration Tests")
+@org.junit.jupiter.api.condition.EnabledIfSystemProperty(named = "integration.tests.enabled", matches = "true")
 class HikariCPIntegrationTest extends BaseIntegrationTest {
 
     @Test

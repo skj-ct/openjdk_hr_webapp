@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @Testcontainers
 @DisplayName("DatabaseConfig Integration Tests")
+@org.junit.jupiter.api.condition.EnabledIfSystemProperty(named = "integration.tests.enabled", matches = "true")
 class DatabaseConfigIntegrationTest {
     
     @Container

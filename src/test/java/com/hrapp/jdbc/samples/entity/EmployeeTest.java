@@ -86,7 +86,7 @@ class EmployeeTest {
         assertEquals("john.doe@company.com", employee.getEmail());
         assertEquals("555-1234", employee.getPhoneNumber());
         assertEquals("DEV", employee.getJobId());
-        assertEquals(new BigDecimal("75000.00"), employee.getSalary());
+        assertEquals(0, new BigDecimal("75000.00").compareTo(employee.getSalary()));
     }
     
     @Test
@@ -104,7 +104,7 @@ class EmployeeTest {
         assertEquals("jane.smith@company.com", emp.getEmail());
         assertEquals("555-5678", emp.getPhoneNumber());
         assertEquals("MGR", emp.getJobId());
-        assertEquals(new BigDecimal("85000"), emp.getSalary());
+        assertEquals(0, new BigDecimal("85000").compareTo(emp.getSalary()));
     }
 
     @Test
@@ -130,7 +130,7 @@ class EmployeeTest {
         assertEquals("john.doe@example.com", emp.getEmail());
         assertEquals("555-1234", emp.getPhoneNumber());
         assertEquals("IT_PROG", emp.getJobId());
-        assertEquals(new BigDecimal("75000.00"), emp.getSalary());
+        assertEquals(0, new BigDecimal("75000.00").compareTo(emp.getSalary()));
     }
 
     @Test
@@ -156,7 +156,7 @@ class EmployeeTest {
         assertEquals("john.doe@example.com", emp.getEmail());
         assertEquals("555-1234", emp.getPhoneNumber());
         assertEquals("IT_PROG", emp.getJobId());
-        assertEquals(new BigDecimal("75000.00"), emp.getSalary());
+        assertEquals(0, new BigDecimal("75000.00").compareTo(emp.getSalary()));
     }
 
     // ========================================
@@ -183,7 +183,7 @@ class EmployeeTest {
         assertEquals("updated@company.com", employee.getEmail());
         assertEquals("555-9999", employee.getPhoneNumber());
         assertEquals("ADMIN", employee.getJobId());
-        assertEquals(new BigDecimal("90000.00"), employee.getSalary());
+        assertEquals(0, new BigDecimal("90000.00").compareTo(employee.getSalary()));
     }
 
     @ParameterizedTest

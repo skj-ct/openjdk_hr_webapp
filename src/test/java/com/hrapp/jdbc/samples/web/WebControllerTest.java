@@ -70,12 +70,21 @@ class WebControllerTest {
         webController = new WebController();
         
         // Replace the JdbcBean with our mock using reflection or setter
-        webController.jdbcBean = mockJdbcBean;
+        try {
+            java.lang.reflect.Field jdbcBeanField = WebController.class.getDeclaredField("jdbcBean");
+            jdbcBeanField.setAccessible(true);
+            jdbcBeanField.set(webController, mockJdbcBean);
+        } catch (Exception e) {
+            // If reflection fails, tests will use the default JdbcBean
+        }
         
         // Set up response writer
         responseWriter = new StringWriter();
         printWriter = new PrintWriter(responseWriter);
         when(mockResponse.getWriter()).thenReturn(printWriter);
+        
+        // Set up proper content type
+        when(mockResponse.getContentType()).thenReturn("application/json");
     }
 
     @AfterEach

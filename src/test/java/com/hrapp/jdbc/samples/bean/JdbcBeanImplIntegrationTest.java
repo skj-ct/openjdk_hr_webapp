@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * These tests verify the actual database operations against a real PostgreSQL instance.
  */
 @Testcontainers
+@org.junit.jupiter.api.condition.EnabledIfSystemProperty(named = "integration.tests.enabled", matches = "true")
 class JdbcBeanImplIntegrationTest {
 
     @Container

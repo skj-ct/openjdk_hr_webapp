@@ -61,6 +61,9 @@ class GetRoleTest {
         responseWriter = new StringWriter();
         printWriter = new PrintWriter(responseWriter);
         when(mockResponse.getWriter()).thenReturn(printWriter);
+        
+        // Set up proper content type
+        when(mockResponse.getContentType()).thenReturn("application/json");
     }
 
     @AfterEach

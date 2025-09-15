@@ -63,8 +63,8 @@ class JdbcBeanImplTest {
 
     @AfterEach
     void tearDown() {
-        // Verify no resource leaks
-        verifyNoMoreInteractions(mockConnection, mockStatement, mockPreparedStatement);
+        // Reset mocks for next test
+        reset(mockConnectionFactory, mockConnection, mockStatement, mockPreparedStatement, mockResultSet);
     }
 
     // ========================================

@@ -76,7 +76,8 @@ class JdbcBeanImplSalaryIncrementTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(expectedSalary, result.get(0).getSalary());
+        assertEquals(0, expectedSalary.compareTo(result.get(0).getSalary()),
+            "Expected salary: " + expectedSalary + ", but got: " + result.get(0).getSalary());
         verify(mockPreparedStatement).setInt(1, incrementPct);
     }
 
@@ -107,7 +108,8 @@ class JdbcBeanImplSalaryIncrementTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(expectedSalary, result.get(0).getSalary());
+        assertEquals(0, expectedSalary.compareTo(result.get(0).getSalary()),
+            "Expected salary: " + expectedSalary + ", but got: " + result.get(0).getSalary());
         assertTrue(expectedSalary.compareTo(originalSalary) < 0, "Salary should be decreased");
         verify(mockPreparedStatement).setInt(1, incrementPct);
     }
@@ -136,7 +138,8 @@ class JdbcBeanImplSalaryIncrementTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(originalSalary, result.get(0).getSalary());
+        assertEquals(0, originalSalary.compareTo(result.get(0).getSalary()),
+            "Expected salary: " + originalSalary + ", but got: " + result.get(0).getSalary());
         verify(mockPreparedStatement).setInt(1, 0);
     }
 
@@ -165,7 +168,8 @@ class JdbcBeanImplSalaryIncrementTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(expectedSalary, result.get(0).getSalary());
+        assertEquals(0, expectedSalary.compareTo(result.get(0).getSalary()),
+            "Expected salary: " + expectedSalary + ", but got: " + result.get(0).getSalary());
         verify(mockPreparedStatement).setInt(1, incrementPct);
     }
 
@@ -201,15 +205,15 @@ class JdbcBeanImplSalaryIncrementTest {
         
         assertEquals(1, result.get(0).getEmployeeId());
         assertEquals("John", result.get(0).getFirstName());
-        assertEquals(new BigDecimal("82500.00"), result.get(0).getSalary());
+        assertEquals(0, new BigDecimal("82500.00").compareTo(result.get(0).getSalary()));
         
         assertEquals(2, result.get(1).getEmployeeId());
         assertEquals("Jane", result.get(1).getFirstName());
-        assertEquals(new BigDecimal("71500.00"), result.get(1).getSalary());
+        assertEquals(0, new BigDecimal("71500.00").compareTo(result.get(1).getSalary()));
         
         assertEquals(3, result.get(2).getEmployeeId());
         assertEquals("Bob", result.get(2).getFirstName());
-        assertEquals(new BigDecimal("60500.00"), result.get(2).getSalary());
+        assertEquals(0, new BigDecimal("60500.00").compareTo(result.get(2).getSalary()));
     }
 
     @Test
@@ -234,7 +238,8 @@ class JdbcBeanImplSalaryIncrementTest {
         // Original sample salary is 75000, with 15% increment should be 86250
         BigDecimal expectedSalary = new BigDecimal("75000.00")
             .multiply(new BigDecimal("1.15"));
-        assertEquals(expectedSalary, firstEmployee.getSalary());
+        assertEquals(0, expectedSalary.compareTo(firstEmployee.getSalary()),
+            "Expected salary: " + expectedSalary + ", but got: " + firstEmployee.getSalary());
     }
 
     @Test
@@ -275,7 +280,8 @@ class JdbcBeanImplSalaryIncrementTest {
         Employee firstEmployee = result.get(0);
         BigDecimal expectedSalary = new BigDecimal("75000.00")
             .multiply(new BigDecimal("1.10"));
-        assertEquals(expectedSalary, firstEmployee.getSalary());
+        assertEquals(0, expectedSalary.compareTo(firstEmployee.getSalary()), 
+            "Expected salary: " + expectedSalary + ", but got: " + firstEmployee.getSalary());
     }
 
     @Test
@@ -303,7 +309,8 @@ class JdbcBeanImplSalaryIncrementTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(expectedSalary, result.get(0).getSalary());
+        assertEquals(0, expectedSalary.compareTo(result.get(0).getSalary()),
+            "Expected salary: " + expectedSalary + ", but got: " + result.get(0).getSalary());
         assertEquals(2, result.get(0).getSalary().scale()); // Should maintain 2 decimal places
     }
 
